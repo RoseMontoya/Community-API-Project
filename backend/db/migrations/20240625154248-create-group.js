@@ -8,49 +8,61 @@ if (process.env.NODE_ENV === 'production') {
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Users', {
+    await queryInterface.createTable('Groups', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      firstName: {
-        type: Sequelize.STRING(50),
+      organizerId: {
+        type: Sequelize.INTEGER,
         allowNull: false,
+        references: {
+          model: 'Users'
+        },
+        onDelete: 'CASCADE'
       },
-      lastName: {
-        type: Sequelize.STRING(100),
+      name: {
+        type: Sequelize.STRING(60),
+        unique: true,
         allowNull: false
       },
-      username: {
-        type: Sequelize.STRING(30),
+      about: {
+        type: Sequelize.TEXT,
+        allowNull: false
+      },
+      type: {
+        type: Sequelize.ENUM('In person', 'Online'),
+        allowNull: false
+      },
+      private: {
+        type: Sequelize.BOOLEAN,
         allowNull: false,
-        unique: true
+        defaultValue: false
       },
-      email: {
-        type: Sequelize.STRING(256),
-        allowNull: true,
-        unique: true
+      city: {
+        type: Sequelize.STRING(50),
+        allowNull:false
       },
-      hashedPassword: {
-        type: Sequelize.STRING.BINARY,
+      state: {
+        type: Sequelize.STRING(50),
         allowNull: false
       },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP")
       },
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP")
       }
     }, options);
   },
   async down(queryInterface, Sequelize) {
-    options.tableName = 'Users'
+    options.tableName = 'Groups'
     return await queryInterface.dropTable(options);
   }
 };
