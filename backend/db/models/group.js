@@ -15,12 +15,16 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: "CASCADE"
       })
 
+      Group.hasMany(models.GroupImage, {
+        foreignKey: 'groupId',
+        onDelete: 'CASCADE'
+      })
+
     }
   }
   Group.init({
     organizerId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
         model: 'Users'
       },

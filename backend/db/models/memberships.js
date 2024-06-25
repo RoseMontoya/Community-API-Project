@@ -19,7 +19,6 @@ module.exports = (sequelize, DataTypes) => {
   Membership.init({
     userId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
         model: 'Users'
       },
@@ -27,7 +26,6 @@ module.exports = (sequelize, DataTypes) => {
   },
     groupId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
       references: {
         model: 'Groups'
       },

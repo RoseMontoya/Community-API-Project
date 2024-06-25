@@ -8,19 +8,12 @@ if (process.env.NODE_ENV === 'production') {
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Memberships', {
+    await queryInterface.createTable('GroupImages', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
-      },
-      userId: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'Users'
-        },
-        onDelete: 'CASCADE'
       },
       groupId: {
         type: Sequelize.INTEGER,
@@ -29,34 +22,29 @@ module.exports = {
         },
         onDelete: 'CASCADE'
       },
-      status: {
-        type: Sequelize.ENUM('co-host', 'member', 'pending'),
-        defaultValue: 'pending'
+      url: {
+        type: Sequelize.STRING,
+        unique: true,
+        allowNull: false
+      },
+      preview: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
       },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP")
       },
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP")
       }
     }, options);
-
-    options.tableName = "Memberships"
-    await queryInterface.addIndex(
-      options,
-      ['groupId', 'userId'],
-      {
-        unique: true,
-        name: 'idx_group_user'
-      })
   },
   async down(queryInterface, Sequelize) {
-    options.tableName = 'Memberships'
-    await queryInterface.removeColumn(options, 'idx_group_user')
-    return await queryInterface.dropTable(options);
+    options.tableName = 'GroupImages'
+    await queryInterface.dropTable(options);
   }
 };
