@@ -67,6 +67,13 @@ module.exports = {
         email: "dorian.pavus@tevinter.imperium",
         username: "DorianPavus",
         hashedPassword: bcrypt.hashSync("magisterial123")
+      },
+      {
+        firstName: "Josephine",
+        lastName: "Montilyet",
+        email: "josephine.montilyet@inquisition.com",
+        username: "AmbassadorJosephine",
+        hashedPassword: bcrypt.hashSync("diplomacy123")
       }
     ], { validate: true });
   },
@@ -75,7 +82,7 @@ module.exports = {
     options.tableName = 'Users';
     const Op = Sequelize.Op;
     return queryInterface.bulkDelete(options, {
-      username: { [Op.in]: ["TheNightingale", "ApostateSolas", "MadameDeFer","greywardenlover", "WickedWitchofTheWilds", "VarricT", "SeekerCassandra", "DorianPavus"] }
+      username: { [Op.in]: ["TheNightingale", "ApostateSolas", "MadameDeFer","greywardenlover", "WickedWitchofTheWilds", "VarricT", "SeekerCassandra", "DorianPavus", "AmbassadorJosephine"] }
     }, {});
   }
 };
