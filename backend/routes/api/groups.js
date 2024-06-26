@@ -90,7 +90,7 @@ router.get('/current', requireAuth, async(req, res) => {
                 duplicating: false,
             }
         ],
-        group: 'Group.id',
+        group: ['Group.id', 'GroupImages.url'],
         raw: true
     })
 
