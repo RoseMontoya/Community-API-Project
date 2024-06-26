@@ -20,6 +20,11 @@ const demoMemberships = [
   },
   {
     groupId: 2, // Group organized by user with organizerId 2 (Solas)
+    userId: 8, // Dorian
+    status: "member"
+  },
+  {
+    groupId: 2, // Group organized by user with organizerId 2 (Solas)
     userId: 3, // Vivienne
     status: "member"
   },
@@ -39,13 +44,18 @@ const demoMemberships = [
     status: "co-host"
   },
   {
+    groupId: 3, // Group organized by user with organizerId 3 (Vivienne)
+    userId: 6, // Varric
+    status: "member"
+  },
+  {
     groupId: 4, // Group organized by user with organizerId 4 (Alistair)
     userId: 1, // Leliana
     status: "member"
   },
   {
     groupId: 4, // Group organized by user with organizerId 4 (Alistair)
-    userId: 5, // Morrigan
+    userId: 7, // Cassandra
     status: "member"
   },
   {
@@ -55,7 +65,12 @@ const demoMemberships = [
   },
   {
     groupId: 5, // Group organized by user with organizerId 5 (Morrigan)
-    userId: 3, // Vivienne
+    userId: 2, // Solas
+    status: "co-host"
+  },
+  {
+    groupId: 5, // Group organized by user with organizerId 5 (Morrigan)
+    userId: 8, // Dorian
     status: "member"
   },
 ];
