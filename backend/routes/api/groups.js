@@ -59,7 +59,7 @@ router.get('/', async (req, res) => {
                 duplicating: false,
             }
         ],
-        group: 'Group.id',
+        group: ['Group.id', 'GroupImages.url'],
         ...pagination,
         raw: true
     })
