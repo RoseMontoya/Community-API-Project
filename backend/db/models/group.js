@@ -1,14 +1,16 @@
 'use strict';
 const {
-  Model
+  Model, Sequelize
 } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Group extends Model {
     static associate(models) {
       // define association here
       Group.belongsTo(models.User, {
-        foreignKey: 'organizerId'
-      })
+        foreignKey: 'organizerId',
+        as: 'Organizer'
+      }),
 
       Group.hasMany(models.Membership, {
         foreignKey: 'groupId',
@@ -81,6 +83,25 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Group',
+    // scopes: {
+    //   includeMemsAndPreview: {
+    //     include: [
+    //       {
+    //           model: 'Memberships',
+    //           attributes: [[Sequelize.fn('COUNT', Sequelize.col('userId')), 'numMembers']],
+    //           duplicating: false
+
+    //       },
+    //       {
+    //           model: 'GroupImages',
+    //           where: { preview: true},
+    //           attributes: ['url'],
+    //           duplicating: false,
+    //       }
+    //   ],
+    //   group: 'Group.id',
+    //   }
+    // }
   });
   return Group;
 };
