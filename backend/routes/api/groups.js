@@ -2,7 +2,7 @@ const express = require('express');
 const { Sequelize, Op } = require('sequelize');
 
 const { requireAuth } = require('../../utils/auth');
-const { makeGroupObj, notFound} = require('../../utils/helpers')
+const { makeGroupObj, notFound, forbidden} = require('../../utils/helpers')
 const { Group, Membership, GroupImage, User, Venue } = require('../../db/models');
 
 const { check } = require('express-validator');
@@ -151,7 +151,7 @@ router.get('/:groupId', async (req, res, next) => {
         ],
     });
 
-    if (!group) return next(notFound(req));
+    if (!group) return next(notFound('Group'));
 
     group.dataValues.numMembers = await Membership.count({
         where: { groupId: group.id}
@@ -165,6 +165,24 @@ router.get('/:groupId', async (req, res, next) => {
 router.post('/', requireAuth, groupValidator, async (req, res) => {
     const newGroup = await Group.create({ organizerId: req.user.id, ...req.body});
     res.status(201).json(newGroup);
+});
+
+// Create and return a new image for a group specified by id
+router.post('/:groupId/images', requireAuth, async (req, res, next) => {
+    const group = await Group.findByPk(req.params.groupId,{
+        include: {
+            model: GroupImage,
+            attributes: []
+        }
+    });
+
+    if (!group) return next(notFound('Group'));
+
+    if (req.user.id !== group.organizerId) return next(forbidden());
+
+    const newImage = await group.createGroupImage(req.body);
+
+    res.json({ id: newImage.id, url: newImage.url, preview: newImage.preview});
 })
 
 module.exports = router;

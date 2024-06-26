@@ -18,14 +18,16 @@ const makeGroupObj = (group) => {
     return groupObj;
 };
 
-const notFound = (req) => {
-    let type;
-    if (req.params.groupId) type = "Group";
-    if (req.params.venueId) type = "Venue";
-    if (req.params.eventId) type = "Event";
+const notFound = (type) => {
     const err = new Error(`${type} couldn't be found`)
     err.status = 404;
     return err;
+};
+
+const forbidden = () => {
+    const err = new Error('Forbidden');
+    err.status = 403;
+    return err;
 }
 
-module.exports = { makeGroupObj, notFound}
+module.exports = { makeGroupObj, notFound, forbidden}
