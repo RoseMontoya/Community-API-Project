@@ -46,9 +46,9 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Membership',
     indexes: [
       {
+        name: 'idx_group_user',
         unique: true,
         fields: ['groupId', 'userId'],
-        name: 'idx_group_user'
       }
     ]
   });

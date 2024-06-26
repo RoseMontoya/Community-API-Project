@@ -52,11 +52,12 @@ module.exports = {
       {
         unique: true,
         name: 'idx_group_user'
-      })
+      }
+    );
   },
   async down(queryInterface, Sequelize) {
     options.tableName = 'Memberships'
-    await queryInterface.removeColumn(options, 'idx_group_user')
+    await queryInterface.removeIndex(options, 'idx_group_user')
     return await queryInterface.dropTable(options);
   }
 };
