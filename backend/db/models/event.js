@@ -18,6 +18,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'eventId',
         onDelete: 'CASCADE'
       })
+
+      Event.hasMany(models.EventImage, {
+        foreignKey: 'eventId',
+        onDelete: 'CASCADE'
+      })
     }
   }
   Event.init({
