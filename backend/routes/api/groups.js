@@ -8,6 +8,34 @@ const { Group, Membership, GroupImage, User, Venue } = require('../../db/models'
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
 
+// VALIDATORS
+// ! Consider refactoring all validators into a seperate file and importing them into the file.
+const groupValidator = [
+    check('name')
+        .exists({ checkFalsy: true })
+        .isLength({min: 2, max: 60})
+        .withMessage('Name must be 60 characters or less'),
+    check('about') // ! can add in check for uppermax
+        .exists({ checkFalsy: true })
+        .isLength({ min: 50})
+        .withMessage('About must be 50 characters or more'),
+    check('type')
+        .exists({ checkFalsy: true})
+        .isIn(['In person', 'Online'])
+        .withMessage("Type must be 'Online' or 'In person"),
+    check('private')
+        .exists({ checkFalsy: true })
+        .isBoolean()
+        .withMessage('Private must be a boolean'),
+    check('city')
+        .exists({ checkFalsy: true })
+        .withMessage('City is required'),
+    check('state')
+        .exists({ checkFalsy: true })
+        .withMessage('State is required'),
+    handleValidationErrors
+]
+
 const router = express.Router();
 
 // GET
@@ -123,13 +151,20 @@ router.get('/:groupId', async (req, res, next) => {
         ],
     });
 
-    if (!group) return next(notFound(req, res, next));
+    if (!group) return next(notFound(req));
 
     group.dataValues.numMembers = await Membership.count({
         where: { groupId: group.id}
     })
 
     res.json(group)
+})
+
+// POST
+// Creates and returns a new group
+router.post('/', requireAuth, groupValidator, async (req, res) => {
+    const newGroup = await Group.create({ organizerId: req.user.id, ...req.body});
+    res.status(201).json(newGroup);
 })
 
 module.exports = router;
