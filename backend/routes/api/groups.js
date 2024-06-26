@@ -24,8 +24,8 @@ const groupValidator = [
         .isIn(['In person', 'Online'])
         .withMessage("Type must be 'Online' or 'In person"),
     check('private')
-        .exists({ checkFalsy: true })
-        .isBoolean()
+        .exists({ checkNull: true})
+        .isIn(['false', 'true'])
         .withMessage('Private must be a boolean'),
     check('city')
         .exists({ checkFalsy: true })
@@ -183,6 +183,20 @@ router.post('/:groupId/images', requireAuth, async (req, res, next) => {
     const newImage = await group.createGroupImage(req.body);
 
     res.json({ id: newImage.id, url: newImage.url, preview: newImage.preview});
+})
+
+// PUT
+// edit a group
+router.put('/:groupId', requireAuth, groupValidator, async (req, res, next) => {
+    const group = await Group.findByPk(req.params.groupId);
+
+    if (!group) return next(notFound('Group'));
+
+    if (req.user.id !== group.organizerId) return next(forbidden());
+
+    await group.update(req.body);
+
+    res.json(group)
 })
 
 module.exports = router;
