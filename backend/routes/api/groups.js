@@ -36,6 +36,27 @@ const groupValidator = [
     handleValidationErrors
 ]
 
+const venueValidator = [
+    check('address')
+        .exists({ checkFalsy: true })
+        .withMessage('Street address is required'),
+    check('city')
+        .exists({ checkFalsy: true})
+        .withMessage('City is required'),
+    check('state')
+        .exists({ checkFalsy: true})
+        .withMessage('State is required'),
+    check('lat')
+        .exists({ checkFalsy: true})
+        .isFloat({ min: -90, max: 90})
+        .withMessage('Latitude must be within -90 and 90'),
+    check('lng')
+        .exists({ checkFalsy: true})
+        .isFloat({ min: -180, max: 180})
+        .withMessage('Longitude must be within -180 and 180'),
+    handleValidationErrors
+]
+
 const router = express.Router();
 
 // GET
@@ -158,9 +179,6 @@ router.get('/:groupId/venues', requireAuth, async (req, res, next) => {
     // Check if user is not the organizer or a co-host
     if (req.user.id !== group.organizerId && userCohost === false) return next(forbidden());
 
-
-    // console.log('VENUES', group );
-    // console.log('orgId', group.organizerId );
     res.json({ Venues: group.Venues})
 })
 
@@ -222,6 +240,47 @@ router.post('/:groupId/images', requireAuth, async (req, res, next) => {
     const newImage = await group.createGroupImage(req.body);
 
     res.json({ id: newImage.id, url: newImage.url, preview: newImage.preview});
+})
+
+// Create a new Venue for a Group specified by its id
+router.post('/:groupId/venues', requireAuth, venueValidator, async (req, res, next) => {
+    const group = await Group.findByPk(req.params.groupId, {
+        attributes: ['id','organizerId'],
+        include: [
+            {
+                model: Venue,
+            },
+            {
+                // Going through group, get members with status of co-host
+                model: Membership, // ! Repeat try to dry
+                where: {
+                    status: 'co-host'
+                },
+                attributes: ['userId'],
+                required: false
+            }
+        ]
+    });
+
+    // Check if group was found
+    if (!group) return next(notFound('Group'));
+
+    // Check if user id matches one of the co-hosts
+    const cohosts = group.Memberships;
+    let userCohost= false;
+    cohosts.forEach( cohost => {
+        if (req.user.id === cohost.userId) userCohost = true;
+    })
+
+    // Check if user is not the organizer or a co-host
+    if (req.user.id !== group.organizerId && userCohost === false) return next(forbidden());
+
+    const newVenue = await group.createVenue(req.body)
+
+    newVenue.dataValues.updatedAt = undefined;
+    newVenue.dataValues.createdAt = undefined;
+    console.log(newVenue)
+    res.json(newVenue)
 })
 
 // PUT
