@@ -125,6 +125,45 @@ router.get('/current', requireAuth, async(req, res) => {
     res.json({Groups})
 })
 
+// Get all Venues for a Group specified by its id
+router.get('/:groupId/venues', requireAuth, async (req, res, next) => {
+    const group = await Group.findByPk(req.params.groupId, {
+        attributes: ['organizerId'],
+        include: [
+            {
+                model: Venue,
+            },
+            {
+                // Going through group, get members with status of co-host
+                model: Membership, // ! Repeat try to dry
+                where: {
+                    status: 'co-host'
+                },
+                attributes: ['userId'],
+                required: false
+            }
+        ]
+    });
+
+    // Check if group was found
+    if (!group) return next(notFound('Group'));
+
+    // Check if user id matches one of the co-hosts
+    const cohosts = group.Memberships;
+    let userCohost= false;
+    cohosts.forEach( cohost => {
+        if (req.user.id === cohost.userId) userCohost = true;
+    })
+
+    // Check if user is not the organizer or a co-host
+    if (req.user.id !== group.organizerId && userCohost === false) return next(forbidden());
+
+
+    // console.log('VENUES', group );
+    // console.log('orgId', group.organizerId );
+    res.json({ Venues: group.Venues})
+})
+
 // Get details of a Group from an id
 router.get('/:groupId', async (req, res, next) => {
     const group = await Group.findByPk(req.params.groupId, {
