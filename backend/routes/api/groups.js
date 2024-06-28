@@ -5,8 +5,9 @@ const { requireAuth } = require('../../utils/auth');
 const { makeGroupObj, notFound, forbidden} = require('../../utils/helpers')
 const { Group, Membership, GroupImage, User, Venue } = require('../../db/models');
 
+
 const { check } = require('express-validator');
-const { handleValidationErrors } = require('../../utils/validation');
+const { handleValidationErrors, venueValidator } = require('../../utils/validation');
 
 // VALIDATORS
 // ! Consider refactoring all validators into a seperate file and importing them into the file.
@@ -33,27 +34,6 @@ const groupValidator = [
     check('state')
         .exists({ checkFalsy: true })
         .withMessage('State is required'),
-    handleValidationErrors
-]
-
-const venueValidator = [
-    check('address')
-        .exists({ checkFalsy: true })
-        .withMessage('Street address is required'),
-    check('city')
-        .exists({ checkFalsy: true})
-        .withMessage('City is required'),
-    check('state')
-        .exists({ checkFalsy: true})
-        .withMessage('State is required'),
-    check('lat')
-        .exists({ checkFalsy: true})
-        .isFloat({ min: -90, max: 90})
-        .withMessage('Latitude must be within -90 and 90'),
-    check('lng')
-        .exists({ checkFalsy: true})
-        .isFloat({ min: -180, max: 180})
-        .withMessage('Longitude must be within -180 and 180'),
     handleValidationErrors
 ]
 

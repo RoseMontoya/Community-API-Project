@@ -6,23 +6,21 @@ const { makeGroupObj, notFound, forbidden} = require('../../utils/helpers')
 const { Group, Membership, GroupImage, User, Venue } = require('../../db/models');
 
 const { check } = require('express-validator');
-const { handleValidationErrors } = require('../../utils/validation');
+const { handleValidationErrors, venueValidator } = require('../../utils/validation');
 
 const router = express.Router();
 
-// Delete an Image for a Group
-router.delete('/:imageId', requireAuth, async (req, res, next) => {
-    // Search for Image
-    const image = await GroupImage.findByPk(req.params.imageId, {
+// Edit a Venue
+router.put('/:venueId', requireAuth, venueValidator, async (req, res, next) => {
+    const venue = await Venue.findByPk(req.params.venueId, {
         include: [
             {
-                //Include organizer from group
                 model: Group,
                 attributes: ['organizerId'],
                 include: [
                     {
                         // Going through group, get members with status of co-host
-                        model: Membership,
+                        model: Membership, // ! Repeat try to dry
                         where: {
                             status: 'co-host'
                         },
@@ -32,26 +30,31 @@ router.delete('/:imageId', requireAuth, async (req, res, next) => {
                 ]
             }
         ]
+
     });
 
-    // Check user id matches one of the co-hosts
-    const cohosts = image.Group.Memberships;
+    // Check if venue was found
+    if (!venue) return next(notFound('Venue'));
+
+    const group = venue.Group;
+    // console.log(group)
+
+    // Check if user id matches one of the co-hosts
+    const cohosts = group.Memberships;
     let userCohost= false;
     cohosts.forEach( cohost => {
+        console.log(req.user.id)
         if (req.user.id === cohost.userId) userCohost = true;
     })
 
     // Check if user is not the organizer or a co-host
-    if (req.user.id !== image.Group.organizerId && userCohost === false) return next(forbidden());
-    // Check if image was found
-    if (!image) return next(notFound('Group Image'));
+    if (req.user.id !== group.organizerId && userCohost === false) return next(forbidden());
 
-    // res.json(image)
-    // Destory image and return a success
-    await image.destroy();
-    res.json({ "message": "Successfully deleted" })
+    await venue.update(req.body)
+
+    venue.dataValues.Group = undefined;
+    venue.updatedAt = undefined;
+    res.json(venue)
 })
-
-
 
 module.exports = router;
