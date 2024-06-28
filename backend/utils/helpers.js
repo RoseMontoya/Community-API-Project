@@ -3,7 +3,8 @@ const { format } = require('date-fns')
 // * Groups
 const makeGroupObj = (group) => {
     private = group.private === 0? false: true;
-    previewImage = group['GroupImages.url']? group['GroupImages.url'] : 'No preview image available'
+    numMembers = group['Memberships.numMembers']? +group['Memberships.numMembers'] : 'No members';
+    previewImage = group['GroupImages.url']? group['GroupImages.url'] : 'No preview image available';
     groupObj = {
         id: group.id,
         organizerId: group.organizerId,
@@ -15,7 +16,7 @@ const makeGroupObj = (group) => {
         state: group.state,
         createdAt: format(group.createdAt, 'yyyy-MM-dd HH:mm:ss'),
         updatedAt: format(group.updatedAt, 'yyyy-MM-dd HH:mm:ss'),
-        numMembers: +group['Memberships.numMembers'],
+        numMembers: numMembers,
         previewImage: previewImage
     };
     return groupObj;

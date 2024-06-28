@@ -4,7 +4,7 @@ const { format } = require('date-fns')
 
 const { requireAuth } = require('../../utils/auth');
 const { makeGroupObj, notFound, forbidden} = require('../../utils/helpers')
-const { Group, Membership, GroupImage, User, Venue, Event, Attendence, EventImage } = require('../../db/models');
+const { Group, Membership, GroupImage, User, Venue, Event, Attendance, EventImage } = require('../../db/models');
 
 
 const { check } = require('express-validator');
@@ -18,14 +18,14 @@ router.get('/', async (req, res) => {
     const events = await Event.findAll({
         include: [
             {
-                model: Attendence,
-                attributes: [[Sequelize.fn('COUNT', Sequelize.col('id')), 'numAttending']],
+                model: Attendance,
+                attributes: [],
                 duplicating: false
             },
             {
                 model: EventImage,
                 where: { preview: true },
-                attributes: ['url'],
+                attributes: [],
                 duplicating: false
             },
             {
@@ -37,11 +37,23 @@ router.get('/', async (req, res) => {
                 attributes: ['id', 'city', 'state']
             }
         ],
-        group: ['Event.id', 'EventImages.url'],
-        limit: 2,
-        offset: 2,
-        raw: true
+        attributes: {
+            include: [
+                [Sequelize.fn('COUNT', Sequelize.col('Attendances.userId')), 'numAttending'],
+                [Sequelize.col('EventImages.url'), "previewImage"]
+            ],
+            exclude: ['updatedAt', 'createdAt', 'description', 'capacity', 'price']
+        },
+        group: ['Event.id', 'EventImages.url']
     })
+
+    events.forEach(event => {
+        event.dataValues.startDate = format(event.startDate, 'yyyy-MM-dd HH:mm:ss');
+        event.dataValues.endDate = format(event.endDate, 'yyyy-MM-dd HH:mm:ss')
+        event.dataValues.numAttending = event.dataValues.numAttending;
+    })
+
+    res.json({ Events: events })
 })
 
 module.exports = router;

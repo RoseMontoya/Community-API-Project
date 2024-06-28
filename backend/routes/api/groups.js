@@ -4,7 +4,7 @@ const { format } = require('date-fns')
 
 const { requireAuth } = require('../../utils/auth');
 const { makeGroupObj, notFound, forbidden} = require('../../utils/helpers')
-const { Group, Membership, GroupImage, User, Venue } = require('../../db/models');
+const { Group, Membership, GroupImage, User, Venue, Attendance, Event, EventImage } = require('../../db/models');
 
 
 const { check } = require('express-validator');
@@ -161,6 +161,53 @@ router.get('/:groupId/venues', requireAuth, async (req, res, next) => {
     if (req.user.id !== group.organizerId && userCohost === false) return next(forbidden());
 
     res.json({ Venues: group.Venues})
+})
+
+// Get all Events of a Group specified by its id
+router.get('/:groupId/events', async (req, res, next) => {
+    const events = await Event.findAll({ // ! mostly a duplicate, try to dry
+        where: { groupId: req.params.groupId},
+        include: [
+            {
+                model: Attendance,
+                attributes: [],
+                duplicating: false
+            },
+            {
+                model: EventImage,
+                where: { preview: true },
+                attributes: [],
+                duplicating: false
+            },
+            {
+                model: Group,
+                attributes: ['id', 'name', 'city', 'state'],
+                require: true
+            },
+            {
+                model: Venue,
+                attributes: ['id', 'city', 'state']
+            }
+        ],
+        attributes: {
+            include: [
+                [Sequelize.fn('COUNT', Sequelize.col('Attendances.userId')), 'numAttending'],
+                [Sequelize.col('EventImages.url'), "previewImage"]
+            ],
+            exclude: ['updatedAt', 'createdAt', 'description', 'capacity', 'price']
+        },
+        group: ['Event.id', 'EventImages.url']
+    })
+
+    if (!events.groupId) return next(notFound("Group"));
+
+    events.forEach(event => {
+        event.dataValues.startDate = format(event.startDate, 'yyyy-MM-dd HH:mm:ss');
+        event.dataValues.endDate = format(event.endDate, 'yyyy-MM-dd HH:mm:ss')
+        event.dataValues.numAttending = event.dataValues.numAttending;
+    })
+
+    res.json({ Events: events })
 })
 
 // Get details of a Group from an id
