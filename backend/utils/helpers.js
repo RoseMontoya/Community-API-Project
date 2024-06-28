@@ -1,3 +1,5 @@
+const { format } = require('date-fns')
+
 // * Groups
 const makeGroupObj = (group) => {
     private = group.private === 0? false: true;
@@ -10,8 +12,8 @@ const makeGroupObj = (group) => {
         private: private,
         city: group.city,
         state: group.state,
-        createdAt: group.createdAt,
-        updatedAt: group.updatedAt,
+        createdAt: format(group.createdAt, 'yyyy-MM-dd HH:mm:ss'),
+        updatedAt: format(group.updatedAt, 'yyyy-MM-dd HH:mm:ss'),
         numMembers: group['Memberships.numMembers'],
         previewImage: group['GroupImages.url']
     };

@@ -3,6 +3,8 @@ const {
   Model, Sequelize
 } = require('sequelize');
 
+const { format } = require('date-fns');
+
 module.exports = (sequelize, DataTypes) => {
   class Group extends Model {
     static associate(models) {

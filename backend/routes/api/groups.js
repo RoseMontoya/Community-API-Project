@@ -1,5 +1,6 @@
 const express = require('express');
 const { Sequelize, Op } = require('sequelize');
+const { format } = require('date-fns')
 
 const { requireAuth } = require('../../utils/auth');
 const { makeGroupObj, notFound, forbidden} = require('../../utils/helpers')
@@ -190,6 +191,8 @@ router.get('/:groupId', async (req, res, next) => {
 
     if (!group) return next(notFound('Group'));
 
+    group.dataValues.updatedAt = format(group.updatedAt, 'yyyy-MM-dd HH:mm:ss');
+    group.dataValues.createdAt = format(group.createdAt, 'yyyy-MM-dd HH:mm:ss');
     group.dataValues.numMembers = await Membership.count({
         where: { groupId: group.id}
     })
@@ -201,7 +204,8 @@ router.get('/:groupId', async (req, res, next) => {
 // Creates and returns a new group
 router.post('/', requireAuth, groupValidator, async (req, res) => {
     const newGroup = await Group.create({ organizerId: req.user.id, ...req.body});
-    res.status(201).json(newGroup);
+    const newGroupObj = makeGroupObj(newGroup)
+    res.status(201).json(newGroupObj);
 });
 
 // Create and return a new image for a group specified by id
@@ -274,7 +278,8 @@ router.put('/:groupId', requireAuth, groupValidator, async (req, res, next) => {
 
     await group.update(req.body);
 
-    res.json(group)
+    const groupObj = makeGroupObj(group)
+    res.json(groupObj)
 });
 
 // DELETE
