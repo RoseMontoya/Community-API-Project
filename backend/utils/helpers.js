@@ -22,6 +22,23 @@ const makeGroupObj = (group) => {
     return groupObj;
 };
 
+const makeEventObj = (event) => {
+    // console.log(typeof parseFloat(event.price.toFixed()))
+    const obj = {
+        id: event.id,
+        groupId: event.groupId,
+        venueId: event.venueId,
+        name: event.name,
+        type: event.type,
+        capacity: event.capacity,
+        price: event.price.toFixed(2), // ! need to fix price to number with correct decimals
+        description: event.description,
+        startDate: format(event.startDate, 'yyyy-MM-dd HH:mm:ss'),
+        endDate: format(event.endDate, 'yyyy-MM-dd HH:mm:ss')
+    }
+    return obj;
+}
+
 const notFound = (type) => {
     const err = new Error(`${type} couldn't be found`)
     err.status = 404;
@@ -34,4 +51,4 @@ const forbidden = () => {
     return err;
 }
 
-module.exports = { makeGroupObj, notFound, forbidden}
+module.exports = { makeGroupObj, makeEventObj, notFound, forbidden}

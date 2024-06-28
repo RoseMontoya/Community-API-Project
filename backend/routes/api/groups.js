@@ -3,7 +3,7 @@ const { Sequelize, Op } = require('sequelize');
 const { format } = require('date-fns')
 
 const { requireAuth } = require('../../utils/auth');
-const { makeGroupObj, notFound, forbidden} = require('../../utils/helpers')
+const { makeGroupObj, makeEventObj, notFound, forbidden} = require('../../utils/helpers')
 const { Group, Membership, GroupImage, User, Venue, Attendance, Event, EventImage } = require('../../db/models');
 
 
@@ -355,13 +355,9 @@ router.post('/:groupId/events', requireAuth, eventValidator, async (req, res, ne
     if (req.user.id !== group.organizerId && userCohost === false) return next(forbidden());
 
     const newEvent = await group.createEvent(req.body)
+    const newEventObj = makeEventObj(newEvent);
 
-    newEvent.dataValues.startDate = format(newEvent.startDate, 'yyyy-MM-dd HH:mm:ss');
-    newEvent.dataValues.endDate = format(newEvent.endDate, 'yyyy-MM-dd HH:mm:ss');
-    newEvent.dataValues.updatedAt = undefined;
-    newEvent.dataValues.createdAt = undefined;
-
-    res.json(newEvent)
+    res.json(newEventObj)
 })
 
 // PUT
