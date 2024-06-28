@@ -1,4 +1,4 @@
-const { validationResult, check } = require('express-validator');
+const { validationResult, check,  } = require('express-validator');
 
 // middleware for formatting errors from express-validator middleware
 // (to customize, see express-validator's documentation)
@@ -41,7 +41,53 @@ const venueValidator = [
   handleValidationErrors
 ]
 
+const eventValidator = [
+  check('name')
+    .exists({checkFalsy: true })
+    .isLength({ min: 5})
+    .withMessage('Name must be at least 5 characters'),
+  check('type')
+    .exists({ checkFalsy: true })
+    .isIn(['Online', 'In person'])
+    .withMessage('Type must be Online or In person'),
+  check('capacity')
+    .exists({ checkFalsy: true })
+    .isInt({ min: 0 })
+    .withMessage('Capacity must be an integer'),
+  check('price')
+    .exists({ checkFalsy: true })
+    .isFloat({ min: 0})
+    .withMessage('Price is invalid'),
+  check('price')
+    .customSanitizer((value) => {
+      return +(Number(value).toFixed(2));
+    }),
+  check('description')
+    .exists({ checkFalsy: true })
+    .withMessage('Description is required'),
+  check('startDate')
+    .exists({ checkFalsy: true })
+    .custom( value => {
+      const current = new Date();
+      const startDate = new Date(value)
+
+      if (current > startDate) throw new Error('Start date must be in the future');
+      else return true
+    }),
+  check('endDate')
+    .exists({ checkFalsy: true })
+    .custom((value, {req} )=> {
+      const startDate = new Date(req.body.startDate)
+      const endDate = new Date(value)
+
+      if (endDate < startDate) throw new Error('End date is less than start date');
+      else return true;
+    }),
+  handleValidationErrors
+]
+
 module.exports = {
   handleValidationErrors,
-  venueValidator
+  venueValidator,
+  eventValidator
 };

@@ -8,7 +8,7 @@ const { Group, Membership, GroupImage, User, Venue, Event, Attendance, EventImag
 
 
 const { check } = require('express-validator');
-const { handleValidationErrors, venueValidator } = require('../../utils/validation');
+const { handleValidationErrors, venueValidator , eventValidator } = require('../../utils/validation');
 
 const router = express.Router();
 
@@ -50,10 +50,53 @@ router.get('/', async (req, res) => {
     events.forEach(event => {
         event.dataValues.startDate = format(event.startDate, 'yyyy-MM-dd HH:mm:ss');
         event.dataValues.endDate = format(event.endDate, 'yyyy-MM-dd HH:mm:ss')
-        event.dataValues.numAttending = event.dataValues.numAttending;
+        event.dataValues.numAttending = +event.dataValues.numAttending;
     })
 
     res.json({ Events: events })
 })
+
+// Get details of an Event specified by its id
+router.get('/:eventId', async (req, res, next) => {
+    const event = await Event.findByPk( req.params.eventId, { // ! another repeat
+        include: [
+            {
+                model: Attendance,
+                attributes: [],
+                duplicating: false
+            },
+            {
+                model: Group,
+                attributes: ['id', 'name', 'private', 'city', 'state']
+            },
+            {
+                model: Venue,
+                attributes: { exclude: ['updatedAt', 'createdAt', 'groupId']}
+            },
+            {
+                model: EventImage,
+                attributes: ['id', 'url', 'preview'],
+            },
+        ],
+        attributes: {
+            include: [
+                [Sequelize.fn('COUNT', Sequelize.col('Attendances.userId')), 'numAttending']
+            ],
+            exclude: ['updatedAt', 'createdAt']
+        },
+        group: ['Event.id']
+    })
+
+    if (!event) return next(notFound('Event'))
+
+    event.dataValues.startDate = format(event.startDate, 'yyyy-MM-dd HH:mm:ss');
+    event.dataValues.endDate = format(event.endDate, 'yyyy-MM-dd HH:mm:ss')
+    event.dataValues.numAttending = +event.dataValues.numAttending;
+
+    res.json(event)
+})
+
+// POST
+
 
 module.exports = router;

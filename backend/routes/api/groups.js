@@ -8,7 +8,7 @@ const { Group, Membership, GroupImage, User, Venue, Attendance, Event, EventImag
 
 
 const { check } = require('express-validator');
-const { handleValidationErrors, venueValidator } = require('../../utils/validation');
+const { handleValidationErrors, venueValidator, eventValidator } = require('../../utils/validation');
 
 // VALIDATORS
 // ! Consider refactoring all validators into a seperate file and importing them into the file.
@@ -204,7 +204,7 @@ router.get('/:groupId/events', async (req, res, next) => {
     events.forEach(event => {
         event.dataValues.startDate = format(event.startDate, 'yyyy-MM-dd HH:mm:ss');
         event.dataValues.endDate = format(event.endDate, 'yyyy-MM-dd HH:mm:ss')
-        event.dataValues.numAttending = event.dataValues.numAttending;
+        event.dataValues.numAttending = +event.dataValues.numAttending;
     })
 
     res.json({ Events: events })
@@ -312,6 +312,56 @@ router.post('/:groupId/venues', requireAuth, venueValidator, async (req, res, ne
     newVenue.dataValues.createdAt = undefined;
     console.log(newVenue)
     res.json(newVenue)
+})
+
+// Create an Event for a Group specified by its id
+router.post('/:groupId/events', requireAuth, eventValidator, async (req, res, next) => {
+    if (req.body.venueId === undefined) req.body.venueId = null;
+    const group = await Group.findByPk(req.params.groupId, {
+        attributes: ['id','organizerId'],
+        include: [
+            {
+                model: Venue,
+                where: { id: req.body.venueId},
+                attributes: ['id'],
+                required: false
+            },
+            {
+                // Going through group, get members with status of co-host
+                model: Membership, // ! Repeat try to dry
+                where: {
+                    status: 'co-host'
+                },
+                attributes: ['userId'],
+                required: false
+            }
+        ]
+    });
+
+    console.log(group)
+    // Check if group was found
+    if (!group) return next(notFound('Group'));
+    if (req.body.venueId && group.Venues.length === 0) return next(notFound('Venue'))
+
+
+    // Check if user id matches one of the co-hosts
+    const cohosts = group.Memberships;
+    let userCohost= false;
+    cohosts.forEach( cohost => {
+        if (req.user.id === cohost.userId) userCohost = true;
+    })
+
+    // Check if user is not the organizer or a co-host
+    if (req.user.id !== group.organizerId && userCohost === false) return next(forbidden());
+
+    const newEvent = await group.createEvent(req.body)
+
+    newEvent.dataValues.startDate = format(newEvent.startDate, 'yyyy-MM-dd HH:mm:ss');
+    newEvent.dataValues.endDate = format(newEvent.endDate, 'yyyy-MM-dd HH:mm:ss');
+    newEvent.dataValues.updatedAt = undefined;
+    newEvent.dataValues.createdAt = undefined;
+
+    res.json(newEvent)
 })
 
 // PUT
