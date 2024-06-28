@@ -3,7 +3,7 @@ const { Sequelize, Op } = require('sequelize');
 const { format } = require('date-fns')
 
 const { requireAuth } = require('../../utils/auth');
-const { makeGroupObj, notFound, forbidden} = require('../../utils/helpers')
+const { makeGroupObj, notFound, forbidden, makeEventObj} = require('../../utils/helpers')
 const { Group, Membership, GroupImage, User, Venue, Event, Attendance, EventImage } = require('../../db/models');
 
 
@@ -125,7 +125,6 @@ router.post('/:eventId/images', requireAuth , async (req, res, next ) => {
             }
         ]
     })
-    console.log(event)
 
     // Check if event was found
     if (!event) return next(notFound('Event'));
@@ -134,15 +133,12 @@ router.post('/:eventId/images', requireAuth , async (req, res, next ) => {
     const cohosts = event.Group.Memberships;
     let userCohost= false;
     cohosts.forEach( cohost => {
-        console.log(cohost.userId)
         if (req.user.id === cohost.userId) userCohost = true;
     })
 
     const attendees = event.Attendances;
-    console.log(attendees)
     let userAttendee = false;
     if (attendees) attendees.forEach( attendee => {
-        console.log(attendee);
         if (req.user.id === attendee.userId) userAttendee = true;
     })
 
@@ -158,6 +154,62 @@ router.post('/:eventId/images', requireAuth , async (req, res, next ) => {
     }
 
     res.json(newImageObj)
+})
+
+// PUT
+// Edit an Event specified by it id
+router.put('/:eventId', requireAuth, eventValidator, async (req, res, next) => {
+    console.log(req.body.venueId)
+    if (req.body.venueId === undefined) req.body.venueId = null;
+
+    const event  = await Event.findByPk(req.params.eventId, {
+        include: [
+            {
+                model: Group,
+                attributes: ['organizerId'],
+                include: [
+                    {
+                        // Going through group, get members with status of co-host
+                        model: Membership, // ! Repeat try to dry
+                        where: {
+                            status: 'co-host'
+                        },
+                        attributes: ['userId'],
+                        required: false
+                    },
+                    {
+                        model: Venue,
+                        attributes: ['id'],
+                        where: {
+                            id: req.body.venueId
+                        },
+                        required: false
+                    }
+                ]
+            }
+        ]
+    })
+    console.log(event)
+    // Check if event was found
+    if (!event) return next(notFound('Event'));
+    if (req.body.venueId && event.Group.Venues.length === 0) return next(notFound('Venue'))
+
+    // Check if user id matches one of the co-hosts
+    const cohosts = event.Group.Memberships;
+    let userCohost= false;
+    cohosts.forEach( cohost => {
+        if (req.user.id === cohost.userId) userCohost = true;
+    })
+
+
+    // Check if user is not the organizer or a co-host
+    if (req.user.id !== event.Group.organizerId && !userCohost ) return next(forbidden());
+
+    await event.update(req.body);
+
+    const eventObj = makeEventObj(event)
+
+    res.json(eventObj)
 })
 
 module.exports = router;
