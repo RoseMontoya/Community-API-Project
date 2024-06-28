@@ -53,7 +53,7 @@ router.put('/:venueId', requireAuth, venueValidator, async (req, res, next) => {
     await venue.update(req.body)
 
     venue.dataValues.Group = undefined;
-    venue.updatedAt = undefined;
+    venue.dataValues.updatedAt = undefined;
     res.json(venue)
 })
 
