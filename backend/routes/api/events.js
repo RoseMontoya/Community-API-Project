@@ -97,6 +97,67 @@ router.get('/:eventId', async (req, res, next) => {
 })
 
 // POST
+// Add an Image to an Event based on the Event's id
+router.post('/:eventId/images', requireAuth , async (req, res, next ) => {
+    // ! think about adding validation for req.body
+    const event  = await Event.findByPk(req.params.eventId, {
+        include: [
+            {
+                model: Group,
+                attributes: ['organizerId'],
+                include: [
+                    {
+                        // Going through group, get members with status of co-host
+                        model: Membership, // ! Repeat try to dry
+                        where: {
+                            status: 'co-host'
+                        },
+                        attributes: ['userId'],
+                        required: false
+                    }
+                ]
+            },
+            {
+                model: Attendance,
+                where: { status : 'attending'},
+                attributes: ['userId'],
+                required: false
+            }
+        ]
+    })
+    console.log(event)
 
+    // Check if event was found
+    if (!event) return next(notFound('Event'));
+
+    // Check if user id matches one of the co-hosts
+    const cohosts = event.Group.Memberships;
+    let userCohost= false;
+    cohosts.forEach( cohost => {
+        console.log(cohost.userId)
+        if (req.user.id === cohost.userId) userCohost = true;
+    })
+
+    const attendees = event.Attendances;
+    console.log(attendees)
+    let userAttendee = false;
+    if (attendees) attendees.forEach( attendee => {
+        console.log(attendee);
+        if (req.user.id === attendee.userId) userAttendee = true;
+    })
+
+    // Check if user is not the organizer or a co-host
+    if (req.user.id !== event.Group.organizerId && !userCohost && !userAttendee) return next(forbidden());
+
+    const newImage = await event.createEventImage(req.body);
+
+    const newImageObj = {
+        id: newImage.id,
+        url: newImage.url,
+        preview: newImage.preview
+    }
+
+    res.json(newImageObj)
+})
 
 module.exports = router;

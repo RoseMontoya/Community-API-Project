@@ -34,6 +34,11 @@ const demoAttendances = [
     status: "attending"
   },
   {
+    eventId: 5,   // Event: The Veil and Beyond
+    userId: 8,    // User: Dorian
+    status: "attending"
+  },
+  {
     eventId: 6,   // Event: Secrets of the Spymaster - Advanced Techniques
     userId: 7,    // User: Cassandra
     status: "attending"

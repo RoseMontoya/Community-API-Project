@@ -31,7 +31,7 @@ const makeEventObj = (event) => {
         name: event.name,
         type: event.type,
         capacity: event.capacity,
-        price: event.price.toFixed(2), // ! need to fix price to number with correct decimals
+        price: parseFloat(event.price.toFixed(2)), // ! need to fix price to number with correct decimals
         description: event.description,
         startDate: format(event.startDate, 'yyyy-MM-dd HH:mm:ss'),
         endDate: format(event.endDate, 'yyyy-MM-dd HH:mm:ss')
