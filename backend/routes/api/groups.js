@@ -38,6 +38,14 @@ const groupValidator = [
     handleValidationErrors
 ]
 
+const memberValidator = [
+    check('status')
+        .exists({ checkFalsy: true})
+        .isIn(['co-host', 'member'])
+        .withMessage('Cannot change a membership status to pending'),
+    handleValidationErrors
+]
+
 const router = express.Router();
 
 // GET
@@ -419,6 +427,7 @@ router.post('/:groupId/events', requireAuth, eventValidator, async (req, res, ne
     res.json(newEventObj)
 });
 
+// Request a Membership for a Group based on the Group's id
 router.post('/:groupId/membership', requireAuth, async (req, res, next) => {
     const group = await Group.findByPk(req.params.groupId);
 
@@ -449,6 +458,57 @@ router.post('/:groupId/membership', requireAuth, async (req, res, next) => {
 })
 
 // PUT
+// Change the status of a membership for a group specified by id
+router.put('/:groupId/membership', memberValidator, requireAuth, async (req, res, next) => {
+    const group = await Group.findByPk(req.params.groupId, {
+        attributes: ['id','organizerId'],
+        include: [
+            {
+                // Going through group, get members with status of co-host
+                model: Membership, // ! Repeat try to dry
+                where: {
+                    status: 'co-host'
+                },
+                attributes: ['userId'],
+                required: false
+            }
+        ]
+    });
+
+    // Check if group was found
+    if (!group) return next(notFound('Group'));
+
+
+    // Check if user exists
+    const user = await User.findByPk(req.body.memberId, { attributes: ['id']})
+    if (!user) return next(notFound('User'))
+
+    // Find membership
+    const membership = await Membership.findOne({ where: { userId: user.id, groupId: group.id }});
+    if (!membership) return next(notFound('Membership'))
+
+    // Check if user id matches one of the co-hosts
+    const cohosts = group.Memberships;
+    let userCohost= false;
+    cohosts.forEach( cohost => {
+        if (req.user.id === cohost.userId) userCohost = true;
+    })
+
+    // Check if user is not the organizer or a co-host
+    if (req.user.id !== group.organizerId && userCohost === false) return next(forbidden());
+
+    // Check if authorized
+    if (req.body.status === 'co-host' && req.user.id !== group.organizerId) return next(forbidden());
+    await membership.update(req.body);
+
+    res.json({
+        id: membership.id,
+        groupId: membership.groupId,
+        memberId: membership.userId,
+        status: membership.status
+    })
+})
+
 // edit a group
 router.put('/:groupId', requireAuth, groupValidator, async (req, res, next) => {
     const group = await Group.findByPk(req.params.groupId);
@@ -462,6 +522,7 @@ router.put('/:groupId', requireAuth, groupValidator, async (req, res, next) => {
     const groupObj = makeGroupObj(group)
     res.json(groupObj)
 });
+
 
 // DELETE
 // Delete an existing group

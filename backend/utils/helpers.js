@@ -40,7 +40,12 @@ const makeEventObj = (event) => {
 }
 
 const notFound = (type) => {
-    const err = new Error(`${type} couldn't be found`)
+    let err;
+    if (type === 'Membership') {
+        err = new Error(`Membership between the user and the group does not exist`)
+    } else {
+        err = new Error(`${type} couldn't be found`)
+    }
     err.status = 404;
     return err;
 };
