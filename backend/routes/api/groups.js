@@ -485,7 +485,7 @@ router.put('/:groupId/membership', memberValidator, requireAuth, async (req, res
 
     // Find membership
     const membership = await Membership.findOne({ where: { userId: user.id, groupId: group.id }});
-    if (!membership) return next(notFound('Membership'))
+    if (!membership) return next(notFound('Member'))
 
     // Check if user id matches one of the co-hosts
     const cohosts = group.Memberships;
@@ -541,7 +541,7 @@ router.delete('/:groupId/membership/:memberId', requireAuth, async (req, res, ne
 
     // Find membership
     const membership = await Membership.findOne({ where: { userId: user.id, groupId: group.id }});
-    if (!membership) return next(notFound('Member'))
+    if (!membership) return next(notFound('Membership'))
 
 
     // console.log(+req.user.id !== +user.id)

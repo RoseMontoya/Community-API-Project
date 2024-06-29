@@ -317,7 +317,7 @@ router.put('/:eventId/attendance', requireAuth, attendanceValidator, async (req,
         }
     });
 
-    if (!attendee) return next(notFound('Attendance'));
+    if (!attendee) return next(notFound('Attendee'));
 
     // Check if user id matches one of the co-hosts
     const cohosts = event.Group.Memberships;
@@ -344,7 +344,6 @@ router.put('/:eventId/attendance', requireAuth, attendanceValidator, async (req,
 
 // Edit an Event specified by it id
 router.put('/:eventId', requireAuth, eventValidator, async (req, res, next) => {
-    console.log(req.body.venueId)
     if (req.body.venueId === undefined) req.body.venueId = null;
 
     const event  = await Event.findByPk(req.params.eventId, {
@@ -397,6 +396,34 @@ router.put('/:eventId', requireAuth, eventValidator, async (req, res, next) => {
 })
 
 // DELETE
+// Delete attendance to an event specified by id
+router.delete('/:eventId/attendance/:userId', requireAuth, async (req, res, next ) => {
+    const event = await Event.findByPk(req.params.eventId, {
+        include: [{
+            model: Group,
+            attributes: ['organizerId', 'id']
+        }]
+    })
+
+    // Check if event was found
+    if (!event) return next(notFound('Event'));
+
+
+    // Check if user exists
+    const user = await User.findByPk(req.params.userId, { attributes: ['id']})
+    if (!user) return next(notFound('User'))
+
+    // Find attendance
+    const attendance = await Attendance.findOne({ where: { userId: user.id, eventId: event.id }});
+    if (!attendance) return next(notFound('Attendance'))
+
+    if (req.user.id !== event.Group.organizerId && req.user.id !== user.id) return next(forbidden());
+
+    await attendance.destroy();
+
+    res.json({ "message": "Successfully deleted attendance from event"});
+})
+
 // Delete an Event specified by its id
 router.delete('/:eventId', requireAuth, async (req, res, next) => {
     const event  = await Event.findByPk(req.params.eventId, {
