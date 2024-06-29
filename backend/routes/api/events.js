@@ -220,6 +220,66 @@ router.post('/:eventId/images', requireAuth , async (req, res, next ) => {
     res.json(newImageObj)
 })
 
+// Request to Attend an Event based on the Event's id
+router.post('/:eventId/attendance', requireAuth, async (req, res, next) => {
+    const event = await Event.findByPk(req.params.eventId, {
+            include: [
+                {
+                    model: Group,
+                    attributes: ['organizerId'],
+                    include: [
+                        {
+                            model: Membership,
+                            where: {
+                                status: {[Op.in]: ['co-host', 'member']},
+                                userId: req.user.id
+                            },
+                            attributes: ['status', 'userId'],
+                            required: false
+                        }
+                    ]
+                }
+            ]
+    });
+
+    if (!event) return next(notFound('Event'));
+    console.log(event)
+
+    // Check if user is a member of the group
+    let isMember = false
+    for (const member of event.Group.Memberships) {
+        console.log("MEMBER",member)
+        if (member.userId === req.user.id) {
+            isMember = true;
+            break
+        };
+    }
+    if (!isMember) return next(forbidden())
+
+    // console.log(isMember)
+
+    // Check if already in attendence
+    const attendee = await Attendance.findOne({
+        where: {
+            eventId: event.id,
+            userId: req.user.id
+        }
+    })
+
+    if (attendee) {
+        let err;
+        if (attendee.status === 'attending') err = new Error('User is already an attendee of the event')
+        else err = new Error('Attendance has already been requested');
+        err.status = 400;
+        return next(err);
+    }
+
+
+    const newAttendance = await event.createAttendance({ userId: req.user.id})
+
+    res.json({ userId: newAttendance.userId, status: newAttendance.status})
+})
+
 // PUT
 // Edit an Event specified by it id
 router.put('/:eventId', requireAuth, eventValidator, async (req, res, next) => {
