@@ -525,6 +525,33 @@ router.put('/:groupId', requireAuth, groupValidator, async (req, res, next) => {
 
 
 // DELETE
+// Delete a membership to a group specified by id
+router.delete('/:groupId/membership/:memberId', requireAuth, async (req, res, next) => {
+    const group = await Group.findByPk(req.params.groupId, {
+        attributes: ['organizerId', 'id']
+    })
+
+        // Check if group was found
+    if (!group) return next(notFound('Group'));
+
+
+    // Check if user exists
+    const user = await User.findByPk(req.params.memberId, { attributes: ['id']})
+    if (!user) return next(notFound('User'))
+
+    // Find membership
+    const membership = await Membership.findOne({ where: { userId: user.id, groupId: group.id }});
+    if (!membership) return next(notFound('Member'))
+
+
+    // console.log(+req.user.id !== +user.id)
+    if (req.user.id !== group.organizerId && req.user.id !== user.id) return next(forbidden());
+
+    await membership.destroy();
+
+    res.json({ "message": "Successfully deleted membership from group"});
+})
+
 // Delete an existing group
 router.delete('/:groupId', requireAuth, async (req, res, next) => {
     const group = await Group.findByPk(req.params.groupId);
