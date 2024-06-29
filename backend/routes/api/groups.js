@@ -196,7 +196,7 @@ router.get('/:groupId/events', async (req, res, next) => {
             ],
             exclude: ['updatedAt', 'createdAt', 'description', 'capacity', 'price']
         },
-        group: ['Event.id', 'EventImages.url']
+        group: ['Group.id', 'EventImages.url']
     })
 
     if (!events.groupId) return next(notFound("Group"));

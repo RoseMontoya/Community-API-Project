@@ -44,7 +44,7 @@ router.get('/', async (req, res) => {
             ],
             exclude: ['updatedAt', 'createdAt', 'description', 'capacity', 'price']
         },
-        group: ['Event.id', 'EventImages.url']
+        group: ['Group.id', 'EventImages.url']
     })
 
     events.forEach(event => {
@@ -84,7 +84,7 @@ router.get('/:eventId', async (req, res, next) => {
             ],
             exclude: ['updatedAt', 'createdAt']
         },
-        group: ['Event.id']
+        group: ['Group.id']
     })
 
     if (!event) return next(notFound('Event'))
