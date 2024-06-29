@@ -52,8 +52,6 @@ const router = express.Router();
 
 // Get all Groups
 router.get('/', async (req, res) => {
-
-    const pagination = {}
     const groups = await Group.findAll({
         include: [ // ! Try to find a way to add these query params into a scope
             {
@@ -70,7 +68,6 @@ router.get('/', async (req, res) => {
             }
         ],
         group: ['Group.id', 'GroupImages.url'],
-        ...pagination,
         raw: true
     })
 
@@ -544,7 +541,6 @@ router.delete('/:groupId/membership/:memberId', requireAuth, async (req, res, ne
     if (!membership) return next(notFound('Membership'))
 
 
-    // console.log(+req.user.id !== +user.id)
     if (req.user.id !== group.organizerId && req.user.id !== user.id) return next(forbidden());
 
     await membership.destroy();

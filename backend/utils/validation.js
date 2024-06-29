@@ -86,6 +86,31 @@ const eventValidator = [
   handleValidationErrors
 ]
 
+const queryValidator = [
+  check('page')
+    .optional()
+    .isInt({ min: 1})
+    .withMessage('Page must be greater than or equal to 1'),
+  check('size')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Size must be greater than or equal to 1'),
+  check('name')
+    .optional()
+    .isEmpty()
+    .withMessage('Name must be a string'),
+  check('type')
+    .optional()
+    .isIn(['Online', 'In Person'])
+    .withMessage(`Type must be 'Online' or 'In Person'`),
+  check('startDate')
+    .optional()
+    .isDate({ format: 'YYYY-MM-DD'})
+    .isAfter(new Date().toISOString())
+    .withMessage('Start date must be a valid datetime'),
+  handleValidationErrors
+]
+
 const attendanceValidator = [
    check('status')
     .exists({ checkFalsy: true })
@@ -98,5 +123,6 @@ module.exports = {
   handleValidationErrors,
   venueValidator,
   eventValidator,
+  queryValidator,
   attendanceValidator
 };

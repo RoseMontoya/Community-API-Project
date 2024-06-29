@@ -8,13 +8,32 @@ const { Group, Membership, GroupImage, User, Venue, Event, Attendance, EventImag
 
 
 const { check } = require('express-validator');
-const { handleValidationErrors, venueValidator , eventValidator, attendanceValidator } = require('../../utils/validation');
+const { handleValidationErrors, venueValidator , eventValidator, queryValidator, attendanceValidator } = require('../../utils/validation');
 
 const router = express.Router();
 
 // GET
 // Get all Events
-router.get('/', async (req, res) => {
+router.get('/', queryValidator, async (req, res) => {
+    let { page, size, name, type, startDate } = req.query
+
+    // Pagination
+    const pagination = {}
+    page = !page ? 1 : parseInt(page);
+    size = !size? 20 : parseInt(size);
+    if(page > 10) page = 10;
+    if(size > 20) size = 20
+
+    pagination.limit = size;
+    pagination.offset = size * (page - 1);
+
+    // Where
+    const where = {}
+    console.log(new Date(startDate))
+    if (name) where.name = {[Op.substring] : `%${name}%`};
+    if (type) where.type = {[Op.in] : [`${type}`]};
+    if (startDate) where.startDate = {[Op.gte] : new Date(startDate)}
+
     const events = await Event.findAll({
         include: [
             {
@@ -44,7 +63,9 @@ router.get('/', async (req, res) => {
             ],
             exclude: ['updatedAt', 'createdAt', 'description', 'capacity', 'price']
         },
-        group: ['Group.id', 'Event.id', 'EventImages.id', 'Venue.id']
+        group: ['Group.id', 'Event.id', 'EventImages.id', 'Venue.id'],
+        where,
+        ...pagination
     })
 
     events.forEach(event => {
@@ -53,7 +74,7 @@ router.get('/', async (req, res) => {
         event.dataValues.numAttending = +event.dataValues.numAttending;
     })
 
-    res.json({ Events: events })
+    res.json({ Events: events, page: page, size: size })
 })
 
 // Get all Attendees of an Event specified by its id
