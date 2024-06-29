@@ -212,6 +212,64 @@ router.get('/:groupId/events', async (req, res, next) => {
     res.json({ Events: events })
 })
 
+// Get all Members of a Group specified by its id
+router.get('/:groupId/members', async (req, res) => {
+    const group = await Group.findByPk(req.params.groupId, {
+        attributes: ['organizerId'],
+        include: [
+            {
+
+                // Going through group, get members with status of co-host
+                model: Membership, // ! Repeat try to dry
+                where: { status: 'co-host'},
+                attributes: ['userId'],
+                required: false
+            }
+        ]
+    });
+
+    // Check if group was found
+    if (!group) return next(notFound('Group'));
+
+    // Check if user id matches one of the co-hosts
+    const cohosts = group.Memberships;
+    let userCohost= false;
+    cohosts.forEach( cohost => {
+        if (req.user.id === cohost.userId) userCohost = true;
+    })
+
+    let members;
+    // Check if user is the organizer or a co-host
+    if (req.user.id === group.organizerId || userCohost) {
+        members = await User.findAll({
+            attributes: ['id', 'firstName', 'lastName', [Sequelize.col('Memberships.status'), 'Membership']],
+            include: {
+                model: Membership,
+                where: { groupId: req.params.groupId},
+                attributes: []
+            }
+        })
+    } else {
+        members = await User.findAll({
+            attributes: ['id', 'firstName', 'lastName', [Sequelize.col('Memberships.status'), 'Membership']],
+            include: {
+                model: Membership,
+                where: {
+                    groupId: req.params.groupId,
+                    status: {[Op.notLike]: 'pending'}
+                },
+                attributes: []
+            }
+        })
+    }
+
+    members.map( member => {
+        member.dataValues.Membership = { status: member.dataValues.Membership }
+    })
+
+    res.json({ Members: members })
+})
+
 // Get details of a Group from an id
 router.get('/:groupId', async (req, res, next) => {
     const group = await Group.findByPk(req.params.groupId, {
