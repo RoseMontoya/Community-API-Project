@@ -11,7 +11,7 @@ const { handleValidationErrors } = require('../../utils/validation');
 const router = express.Router();
 
 // Delete an Image for a Group
-router.delete('/:imageId', requireAuth, async (req, res, next) => {
+router.delete('/:imageId', requireAuth, async (req, res, next) => { // ! double check this route for not found image
     // Search for Image
     const image = await GroupImage.findByPk(req.params.imageId, {
         include: [
@@ -41,10 +41,11 @@ router.delete('/:imageId', requireAuth, async (req, res, next) => {
         if (req.user.id === cohost.userId) userCohost = true;
     })
 
-    // Check if user is not the organizer or a co-host
-    if (req.user.id !== image.Group.organizerId && userCohost === false) return next(forbidden());
     // Check if image was found
     if (!image) return next(notFound('Group Image'));
+
+    // Check if user is not the organizer or a co-host
+    if (req.user.id !== image.Group.organizerId && userCohost === false) return next(forbidden());
 
     // res.json(image)
     // Destory image and return a success
