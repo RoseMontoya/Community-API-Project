@@ -48,6 +48,7 @@ router.post(
     async (req, res, next) => {
       const { credential, password } = req.body;
 
+      console.log(credential, password)
       const user = await User.unscoped().findOne({
         where: {
           [Op.or]: {
@@ -56,7 +57,7 @@ router.post(
           }
         }
       });
-
+      console.log(user)
       if (!user || !bcrypt.compareSync(password, user.hashedPassword.toString())) {
         const err = new Error('Invalid credentials');
         err.status = 401;

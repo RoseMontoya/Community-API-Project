@@ -459,7 +459,7 @@ router.post('/:groupId/membership', requireAuth, async (req, res, next) => {
 
 // PUT
 // Change the status of a membership for a group specified by id
-router.put('/:groupId/membership', memberValidator, requireAuth, async (req, res, next) => {
+router.put('/:groupId/membership', requireAuth, memberValidator, async (req, res, next) => {
     const group = await Group.findByPk(req.params.groupId, {
         attributes: ['id','organizerId'],
         include: [
