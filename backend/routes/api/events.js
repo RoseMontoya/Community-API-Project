@@ -56,6 +56,70 @@ router.get('/', async (req, res) => {
     res.json({ Events: events })
 })
 
+// Get all Attendees of an Event specified by its id
+router.get('/:eventId/attendees', async (req, res, next) => {
+    const event = await Event.findByPk(req.params.eventId, {
+        include: [
+            {
+                model: Group,
+                attributes: ['organizerId'],
+                include: [
+                    {
+
+                        // Going through group, get members with status of co-host
+                        model: Membership, // ! Repeat try to dry
+                        where: { status: 'co-host'},
+                        attributes: ['userId'],
+                        required: false
+                    }
+                ]
+            }
+        ]
+
+    });
+
+    // Check if group was found
+    if (!event) return next(notFound('Event'));
+
+    // Check if user id matches one of the co-hosts
+    const cohosts = event.Group.Memberships;
+    let userCohost= false;
+    cohosts.forEach( cohost => {
+        if (req.user.id === cohost.userId) userCohost = true;
+    })
+
+    let attendees;
+    // Check if user is the organizer or a co-host
+    if (req.user.id === event.Group.organizerId || userCohost) {
+        attendees = await User.findAll({
+            attributes: ['id', 'firstName', 'lastName', [Sequelize.col('Attendances.status'), 'Attendance']],
+            include: {
+                model: Attendance,
+                where: { eventId: req.params.eventId},
+                attributes: []
+            }
+        })
+    } else {
+        attendees = await User.findAll({
+            attributes: ['id', 'firstName', 'lastName', [Sequelize.col('Attendances.status'), 'Attendance']],
+            include: {
+                model: Attendance,
+                where: {
+                    eventId: req.params.eventId,
+                    status: {[Op.in]: ['attending', 'waitlist']}
+                },
+                attributes: []
+            }
+        })
+    }
+
+    attendees.map( attendee => {
+        attendee.dataValues.Attendance = { status: attendee.dataValues.Attendance }
+    })
+
+    res.json({ Attendees: attendees })
+})
+
 // Get details of an Event specified by its id
 router.get('/:eventId', async (req, res, next) => {
     const event = await Event.findByPk( req.params.eventId, { // ! another repeat
