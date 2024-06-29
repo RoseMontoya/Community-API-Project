@@ -213,7 +213,7 @@ router.get('/:groupId/events', async (req, res, next) => {
 })
 
 // Get all Members of a Group specified by its id
-router.get('/:groupId/members', async (req, res) => {
+router.get('/:groupId/members', async (req, res, next) => {
     const group = await Group.findByPk(req.params.groupId, {
         attributes: ['organizerId'],
         include: [
@@ -256,7 +256,7 @@ router.get('/:groupId/members', async (req, res) => {
                 model: Membership,
                 where: {
                     groupId: req.params.groupId,
-                    status: {[Op.notLike]: 'pending'}
+                    status: {[Op.in]: ['co-host', 'member']}
                 },
                 attributes: []
             }
@@ -398,7 +398,6 @@ router.post('/:groupId/events', requireAuth, eventValidator, async (req, res, ne
         ]
     });
 
-    console.log(group)
     // Check if group was found
     if (!group) return next(notFound('Group'));
     if (req.body.venueId && group.Venues.length === 0) return next(notFound('Venue'))
@@ -418,6 +417,35 @@ router.post('/:groupId/events', requireAuth, eventValidator, async (req, res, ne
     const newEventObj = makeEventObj(newEvent);
 
     res.json(newEventObj)
+});
+
+router.post('/:groupId/membership', requireAuth, async (req, res, next) => {
+    const group = await Group.findByPk(req.params.groupId);
+
+    if (!group) return next(notFound('Group'));
+
+    const membership = await Membership.findOne({
+        where: {
+            groupId: group.id,
+            userId: req.user.id
+        },
+        attributes: ['status']
+    })
+
+    if (membership) {
+        let err;
+        if (membership.status === 'pending') {
+            err = new Error('Membership has already been requested');
+        } else {
+            err = new Error('User is already a member of the group')
+        }
+        err.status = 400;
+        return next(err)
+    }
+
+    const newMember = await group.createMembership({ userId: req.user.id });
+
+    res.json({ memberId: newMember.userId, status: newMember.status})
 })
 
 // PUT
