@@ -189,7 +189,7 @@ router.put('/:eventId', requireAuth, eventValidator, async (req, res, next) => {
             }
         ]
     })
-    console.log(event)
+
     // Check if event was found
     if (!event) return next(notFound('Event'));
     if (req.body.venueId && event.Group.Venues.length === 0) return next(notFound('Venue'))
@@ -201,7 +201,6 @@ router.put('/:eventId', requireAuth, eventValidator, async (req, res, next) => {
         if (req.user.id === cohost.userId) userCohost = true;
     })
 
-
     // Check if user is not the organizer or a co-host
     if (req.user.id !== event.Group.organizerId && !userCohost ) return next(forbidden());
 
@@ -210,6 +209,47 @@ router.put('/:eventId', requireAuth, eventValidator, async (req, res, next) => {
     const eventObj = makeEventObj(event)
 
     res.json(eventObj)
+})
+
+// DELETE
+// Delete an Event specified by its id
+router.delete('/:eventId', requireAuth, async (req, res, next) => {
+    const event  = await Event.findByPk(req.params.eventId, {
+        include: [
+            {
+                model: Group,
+                attributes: ['organizerId'],
+                include: [
+                    {
+                        // Going through group, get members with status of co-host
+                        model: Membership, // ! Repeat try to dry
+                        where: {
+                            status: 'co-host'
+                        },
+                        attributes: ['userId'],
+                        required: false
+                    }
+                ]
+            }
+        ]
+    })
+
+    // Check if event was found
+    if (!event) return next(notFound('Event'));
+
+    // Check if user id matches one of the co-hosts
+    const cohosts = event.Group.Memberships;
+    let userCohost= false;
+    cohosts.forEach( cohost => {
+        if (req.user.id === cohost.userId) userCohost = true;
+    })
+
+    // Check if user is not the organizer or a co-host
+    if (req.user.id !== event.Group.organizerId && !userCohost ) return next(forbidden());
+
+    await event.destroy();
+
+    res.json({ message: 'Successfully deleted' })
 })
 
 module.exports = router;

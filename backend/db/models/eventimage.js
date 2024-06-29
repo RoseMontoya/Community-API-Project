@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
   class EventImage extends Model {
     static associate(models) {
       // define association here
-      EventImage.belongsTo(models.EventImage, {
+      EventImage.belongsTo(models.Event, {
         foreignKey: 'eventId'
       })
 
