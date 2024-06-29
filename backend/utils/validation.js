@@ -86,8 +86,17 @@ const eventValidator = [
   handleValidationErrors
 ]
 
+const attendanceValidator = [
+   check('status')
+    .exists({ checkFalsy: true })
+    .isIn(['attending', 'waitlist'])
+    .withMessage('Cannot change an attendance status to pending'),
+  handleValidationErrors
+]
+
 module.exports = {
   handleValidationErrors,
   venueValidator,
-  eventValidator
+  eventValidator,
+  attendanceValidator
 };

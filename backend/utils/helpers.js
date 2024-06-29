@@ -45,6 +45,8 @@ const notFound = (type) => {
         err = new Error(`Membership between the user and the group does not exist`)
     } else if (type === 'Member') {
         err = new Error(`Membership does not exist for this User`)
+    } else if (type === 'Attendance') {
+        err = new Error('Attendance between the user and the event does not exist')
     } else {
         err = new Error(`${type} couldn't be found`)
     }
