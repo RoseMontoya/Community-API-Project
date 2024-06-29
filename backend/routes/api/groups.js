@@ -177,6 +177,7 @@ router.get('/:groupId/events', async (req, res, next) => {
                 model: EventImage,
                 where: { preview: true },
                 attributes: [],
+                required: false,
                 duplicating: false
             },
             {
@@ -186,7 +187,7 @@ router.get('/:groupId/events', async (req, res, next) => {
             },
             {
                 model: Venue,
-                attributes: ['id', 'city', 'state']
+                attributes: ['id', 'city', 'state'],
             }
         ],
         attributes: {
@@ -199,7 +200,8 @@ router.get('/:groupId/events', async (req, res, next) => {
         group: ['Group.id', 'Event.id','EventImages.id', 'Venue.id']
     })
 
-    if (!events.groupId) return next(notFound("Group"));
+    console.log(events.groupId)
+    if (events.length === 0) return next(notFound("Group"));
 
     events.forEach(event => {
         event.dataValues.startDate = format(event.startDate, 'yyyy-MM-dd HH:mm:ss');
