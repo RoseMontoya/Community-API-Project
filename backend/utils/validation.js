@@ -97,6 +97,7 @@ const queryValidator = [
     .withMessage('Size must be greater than or equal to 1'),
   check('name')
     .optional()
+    .not()
     .isEmpty()
     .withMessage('Name must be a string'),
   check('type')

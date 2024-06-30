@@ -317,6 +317,8 @@ router.get('/:groupId', async (req, res, next) => {
 router.post('/', requireAuth, groupValidator, async (req, res) => {
     const newGroup = await Group.create({ organizerId: req.user.id, ...req.body});
     const newGroupObj = makeGroupObj(newGroup)
+    newGroupObj.numMembers = undefined;
+    newGroupObj.previewImage = undefined;
     res.status(201).json(newGroupObj);
 });
 
@@ -517,6 +519,9 @@ router.put('/:groupId', requireAuth, groupValidator, async (req, res, next) => {
     await group.update(req.body);
 
     const groupObj = makeGroupObj(group)
+    groupObj.numMembers = undefined;
+    groupObj.previewImage = undefined;
+
     res.json(groupObj)
 });
 

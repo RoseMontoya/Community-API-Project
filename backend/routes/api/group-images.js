@@ -34,6 +34,9 @@ router.delete('/:imageId', requireAuth, async (req, res, next) => { // ! double 
         ]
     });
 
+    // Check if image was found
+    if (!image) return next(notFound('Group Image'));
+
     // Check user id matches one of the co-hosts
     const cohosts = image.Group.Memberships;
     let userCohost= false;
@@ -41,8 +44,6 @@ router.delete('/:imageId', requireAuth, async (req, res, next) => { // ! double 
         if (req.user.id === cohost.userId) userCohost = true;
     })
 
-    // Check if image was found
-    if (!image) return next(notFound('Group Image'));
 
     // Check if user is not the organizer or a co-host
     if (req.user.id !== image.Group.organizerId && userCohost === false) return next(forbidden());
