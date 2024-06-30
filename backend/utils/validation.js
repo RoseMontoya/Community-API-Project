@@ -99,6 +99,7 @@ const queryValidator = [
     .optional()
     .not()
     .isEmpty()
+    .isAlphanumeric()
     .withMessage('Name must be a string'),
   check('type')
     .optional()
