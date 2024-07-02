@@ -16,8 +16,8 @@ const demoEvents = [
     capacity: 50,
     price: 15.00,
     description: "An online event where Leliana shares her secrets of espionage and intrigue.",
-    startDate: "2024-07-01 20:00:00",
-    endDate: "2024-07-01 22:00:00"
+    startDate: "2024-08-01 20:00:00",
+    endDate: "2024-08-01 22:00:00"
   },
   {
     groupId: 2, // Solas's group
@@ -27,8 +27,8 @@ const demoEvents = [
     capacity: 30,
     price: 20.00,
     description: "Join Solas as he guides you through the mysteries of the Fade.",
-    startDate: "2024-07-05 18:00:00",
-    endDate: "2024-07-05 20:00:00"
+    startDate: "2024-11-05 18:00:00",
+    endDate: "2024-11-05 20:00:00"
   },
   {
     groupId: 3, // Vivienne's group
