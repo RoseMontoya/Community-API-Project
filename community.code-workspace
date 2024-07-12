@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../aa12-authenticate-me"
+		},
+		{
+			"path": "../aa15-react-redux-authenticate-me"
 		}
 	],
 	"settings": {}
