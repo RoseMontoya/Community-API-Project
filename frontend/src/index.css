@@ -1,1 +1,68 @@
 /* TODO: Add sitewide styles */
+body {
+  font-size: 14pt;
+  margin: 0;
+  font-family: "Quicksand", sans-serif;;
+}
+
+form {
+    /* flex: 0 0 400px; */
+    /* width: 70%; */
+    gap: .5em;
+}
+
+input {
+    border: 0;
+    border-bottom: 2px solid #CCC;
+    box-sizing: border-box;
+    display: block;
+    outline: 0;
+    padding: .25em .5em;
+    padding-right: 6em;
+    margin-bottom: 1em;
+  }
+
+button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  border-color: lightgray;
+  border-style: solid;
+}
+
+button:hover {
+  cursor: pointer;
+}
+
+input {
+  border: solid 2px black;
+  border-radius: 2px;
+  background-color: #E8F0FE;
+  font-weight: 500;
+}
+
+.userForm {
+  padding: 1em;
+  /* border-radius: 10px; */
+}
+
+.userForm h2 {
+  margin: 0;
+  padding-bottom: .25em;;
+}
+
+.userForm button {
+  width: 100%;
+  justify-content: center;
+  background-color: #f44336;
+  color: white;
+  border: solid 2px black;
+  border-radius: 2px;
+  padding: .5em;
+}
+
+.error {
+  color: red;
+  margin: 0px 16px 16px 16px;
+}

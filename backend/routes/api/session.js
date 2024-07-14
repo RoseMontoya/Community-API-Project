@@ -46,9 +46,9 @@ router.post(
     '/',
     validateLogin,
     async (req, res, next) => {
+      console.log("TOP")
       const { credential, password } = req.body;
 
-      console.log(credential, password)
       const user = await User.unscoped().findOne({
         where: {
           [Op.or]: {
@@ -57,12 +57,10 @@ router.post(
           }
         }
       });
-      console.log(user)
+
       if (!user || !bcrypt.compareSync(password, user.hashedPassword.toString())) {
         const err = new Error('Invalid credentials');
         err.status = 401;
-        // err.title = 'Login failed';
-        // err.errors = { credential: 'The provided credentials were invalid.' };
         return next(err);
       }
 
